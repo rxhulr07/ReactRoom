@@ -118,9 +118,18 @@ export default async function handler(req, res) {
 
     await sessionData.save();
 
+    // Compose AI message for chat
+    const aiMessage = {
+      role: 'assistant',
+      content: message, // Echo the user's prompt
+      code: generatedCode,
+      timestamp: new Date(),
+    };
+
     res.status(200).json({
       message: 'Component generated successfully',
       code: generatedCode,
+      aiMessage,
     });
   });
 }

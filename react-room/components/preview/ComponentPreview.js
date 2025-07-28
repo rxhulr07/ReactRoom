@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 
-export default function ComponentPreview({ code, onCodeChange }) {
+export default function ComponentPreview({ code, onCodeChange, shouldBlink }) {
   const [activeTab, setActiveTab] = useState('preview');
   const [selectedElement, setSelectedElement] = useState(null);
   const [showPropertyPanel, setShowPropertyPanel] = useState(false);
+  const [blink, setBlink] = useState(false);
 
-  // Create a safe component from the generated code
+  useEffect(() => {
+    if (shouldBlink) {
+      setBlink(true);
+      const timeout = setTimeout(() => setBlink(false), 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [shouldBlink]);
+
   const createComponent = (jsxCode, cssCode) => {
     try {
-      // Create a unique class name for this component
       const className = `component-${Date.now()}`;
-      
-      // Inject CSS into the document
       const styleId = `style-${className}`;
       let styleElement = document.getElementById(styleId);
       if (!styleElement) {
@@ -21,7 +26,6 @@ export default function ComponentPreview({ code, onCodeChange }) {
       }
       styleElement.textContent = cssCode;
 
-      // Create a wrapper div with the component
       return (
         <div 
           className={className}
@@ -30,10 +34,9 @@ export default function ComponentPreview({ code, onCodeChange }) {
         />
       );
     } catch (error) {
-      console.error('Error creating component:', error);
       return (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-600">Error rendering component: {error.message}</p>
+        <div className="p-4 bg-red-100 border border-red-400 rounded-md text-red-600">
+          Error rendering component: {error.message}
         </div>
       );
     }
@@ -41,8 +44,7 @@ export default function ComponentPreview({ code, onCodeChange }) {
 
   const handleElementClick = (e) => {
     e.stopPropagation();
-    const element = e.target;
-    setSelectedElement(element);
+    setSelectedElement(e.target);
     setShowPropertyPanel(true);
   };
 
@@ -50,9 +52,8 @@ export default function ComponentPreview({ code, onCodeChange }) {
     try {
       const fullCode = `// JSX/TSX\n${code.jsx}\n\n// CSS\n${code.css}`;
       await navigator.clipboard.writeText(fullCode);
-      // You could add a toast notification here
     } catch (error) {
-      console.error('Error copying code:', error);
+      console.error('Copy failed:', error);
     }
   };
 
@@ -69,131 +70,68 @@ export default function ComponentPreview({ code, onCodeChange }) {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadZip = async () => {
-    // This would require a server endpoint to create a zip file
-    // For now, we'll just download the individual files
-    handleDownloadCode();
-  };
-
   return (
-    <div className="flex flex-col h-full bg-black">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-700">
-        <button
-          onClick={() => setActiveTab('preview')}
-          className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium ${
-            activeTab === 'preview'
-              ? 'border-b-2 border-blue-500 text-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-          <span>Preview</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('jsx')}
-          className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium ${
-            activeTab === 'jsx'
-              ? 'border-b-2 border-blue-500 text-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-          </svg>
-          <span>JSX/TSX</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('css')}
-          className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium ${
-            activeTab === 'css'
-              ? 'border-b-2 border-blue-500 text-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-          </svg>
-          <span>CSS</span>
-        </button>
+    <div className="flex flex-col h-full bg-gray-900 border-l border-gray-700">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-700 flex items-center justify-between bg-gray-800">
+        <h3 className="text-lg font-semibold text-white">Component Preview</h3>
+        <div className="flex gap-2">
+          <button onClick={handleCopyCode} className="text-sm px-3 py-1 rounded bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition">
+            Copy
+          </button>
+          <button onClick={handleDownloadCode} className="text-sm px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition">
+            Download
+          </button>
+        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-end space-x-2 p-2 border-b border-gray-700">
-        <button
-          onClick={handleCopyCode}
-          className="flex items-center space-x-1 px-3 py-1 text-sm bg-gray-800 hover:bg-gray-700 text-white rounded"
-        >
-          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          <span>Copy</span>
-        </button>
-        <button
-          onClick={handleDownloadCode}
-          className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-900 hover:bg-blue-800 text-blue-300 rounded"
-        >
-          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span>Download</span>
-        </button>
+      {/* Tabs */}
+      <div className="flex px-4 py-2 gap-4 border-b border-gray-700 text-sm">
+        {['preview', 'jsx', 'css'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1 rounded ${
+              activeTab === tab
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            {tab.toUpperCase()}
+          </button>
+        ))}
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-auto">
-        {activeTab === 'preview' && (
-          <div className="p-4 h-full">
-            {code ? (
-              <div className="border border-gray-700 rounded-lg p-4 min-h-[400px] bg-gray-900">
-                {createComponent(code.jsx, code.css)}
-              </div>
-            ) : (
+      {/* Code/Preview Section */}
+      <div className="flex-1 p-4 overflow-auto">
+        <div className={`h-[400px] w-full border border-gray-700 bg-gray-900 rounded-lg p-4 ${blink ? 'ring-4 ring-blue-400' : ''}`}>
+          {activeTab === 'preview' ? (
+            code ? createComponent(code.jsx, code.css) : (
               <div className="flex items-center justify-center h-full text-gray-400">
-                <p>No component generated yet. Start chatting with AI to create one!</p>
+                No component generated yet. Start chatting with AI.
               </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'jsx' && (
-          <div className="p-4">
-            <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm text-white border border-gray-700">
-              <code>{code?.jsx || '// No JSX code generated yet'}</code>
+            )
+          ) : (
+            <pre className="text-sm text-white overflow-auto h-full whitespace-pre-wrap">
+              <code>
+                {activeTab === 'jsx' ? (code?.jsx || '// No JSX generated') : (code?.css || '// No CSS generated')}
+              </code>
             </pre>
-          </div>
-        )}
-
-        {activeTab === 'css' && (
-          <div className="p-4">
-            <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm text-white border border-gray-700">
-              <code>{code?.css || '// No CSS code generated yet'}</code>
-            </pre>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Property Panel (Bonus Feature) */}
+      {/* Property Panel */}
       {showPropertyPanel && selectedElement && (
-        <div className="absolute right-4 top-20 bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 w-64">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-medium text-white">Element Properties</h4>
-            <button
-              onClick={() => setShowPropertyPanel(false)}
-              className="text-gray-400 hover:text-gray-300"
-            >
-              ×
-            </button>
+        <div className="absolute top-20 right-4 w-64 bg-gray-900 text-white border border-gray-700 p-4 rounded-lg shadow-lg z-10">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-semibold">Element Properties</h4>
+            <button onClick={() => setShowPropertyPanel(false)} className="text-gray-400 hover:text-white">×</button>
           </div>
-          
+
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Padding
-              </label>
+              <label className="text-xs text-gray-300">Padding</label>
               <input
                 type="range"
                 min="0"
@@ -205,28 +143,24 @@ export default function ComponentPreview({ code, onCodeChange }) {
                 }}
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Background Color
-              </label>
+              <label className="text-xs text-gray-300">Background</label>
               <input
                 type="color"
-                className="w-full h-8 border border-gray-600 rounded bg-gray-800"
+                className="w-full h-8 bg-gray-800 border border-gray-600 rounded"
                 onChange={(e) => {
                   selectedElement.style.backgroundColor = e.target.value;
                 }}
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Text Content
-              </label>
+              <label className="text-xs text-gray-300">Text Content</label>
               <input
                 type="text"
-                className="w-full px-2 py-1 border border-gray-600 rounded text-sm bg-gray-800 text-white"
                 defaultValue={selectedElement.textContent}
+                className="w-full px-2 py-1 bg-gray-800 border border-gray-600 rounded text-sm text-white"
                 onChange={(e) => {
                   selectedElement.textContent = e.target.value;
                 }}
@@ -237,4 +171,4 @@ export default function ComponentPreview({ code, onCodeChange }) {
       )}
     </div>
   );
-} 
+}

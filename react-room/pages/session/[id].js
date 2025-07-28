@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import Layout from '../../components/layout/Layout';
@@ -13,6 +13,7 @@ export default function SessionPage() {
   const [chatHistory, setChatHistory] = useState([]);
   const [currentCode, setCurrentCode] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [shouldBlink, setShouldBlink] = useState(false);
 
   useEffect(() => {
     if (id && session) {
@@ -26,8 +27,31 @@ export default function SessionPage() {
       if (response.ok) {
         const data = await response.json();
         setSessionData(data.session);
+        console.log('Loaded session data:', data.session);
+        console.log('Chat history:', data.session.chatHistory);
+        // Check each assistant message for code property
+        data.session.chatHistory.forEach((msg, index) => {
+          if (msg.role === 'assistant') {
+            console.log(`Assistant message ${index}:`, msg);
+            console.log(`Has code property:`, !!msg.code);
+            if (msg.code) {
+              console.log(`Code content:`, msg.code);
+            }
+          }
+        });
         setChatHistory(data.session.chatHistory || []);
-        setCurrentCode(data.session.currentCode || null);
+        // Set currentCode from session or from most recent assistant message
+        let codeToSet = data.session.currentCode || null;
+        if (!codeToSet) {
+          const lastAssistantMessage = data.session.chatHistory
+            ?.filter(msg => msg.role === 'assistant' && msg.code)
+            ?.pop();
+          if (lastAssistantMessage) {
+            codeToSet = lastAssistantMessage.code;
+            console.log('Using code from last assistant message as fallback:', codeToSet);
+          }
+        }
+        setCurrentCode(codeToSet);
       } else if (response.status === 404) {
         router.push('/');
       }
@@ -46,25 +70,19 @@ export default function SessionPage() {
     await saveSession(newChatHistory, currentCode);
   };
 
-  const handleCodeGenerated = async (code) => {
+  const handleCodeGenerated = async (code, aiMessage) => {
+    // Attach code to the aiMessage for later reference
+    const aiMsgWithCode = { ...aiMessage, code };
+    console.log('Saving aiMsgWithCode:', aiMsgWithCode);
     setCurrentCode(code);
-    
-    // Add AI response to chat history
-    const aiMessage = {
-      role: 'assistant',
-      content: 'I\'ve generated the component based on your request. You can see it in the preview area.',
-      timestamp: new Date().toISOString(),
-    };
-    
-    const newChatHistory = [...chatHistory, aiMessage];
+    const newChatHistory = [...chatHistory, aiMsgWithCode];
     setChatHistory(newChatHistory);
-    
-    // Auto-save session
     await saveSession(newChatHistory, code);
   };
 
   const saveSession = async (chatHistory, code) => {
     try {
+      console.log('Saving chatHistory:', chatHistory);
       await fetch(`/api/sessions/${id}`, {
         method: 'PUT',
         headers: {
@@ -78,6 +96,14 @@ export default function SessionPage() {
     } catch (error) {
       console.error('Error saving session:', error);
     }
+  };
+
+  // Handler to set preview to the code of the clicked assistant message
+  const handlePromptClick = (code) => {
+    console.log('Setting current code to:', code);
+    setCurrentCode(code);
+    setShouldBlink(true);
+    setTimeout(() => setShouldBlink(false), 500); // 500ms blink
   };
 
   if (status === 'loading' || loading) {
@@ -119,17 +145,21 @@ export default function SessionPage() {
             <ComponentPreview 
               code={currentCode} 
               onCodeChange={setCurrentCode}
+              shouldBlink={shouldBlink}
             />
           </div>
         </div>
         
         {/* Chat Panel */}
         <div className="w-96">
+          {console.log('Passing currentCode to ChatPanel:', currentCode)}
           <ChatPanel
             sessionId={id}
             onCodeGenerated={handleCodeGenerated}
             chatHistory={chatHistory}
             onMessageSent={handleMessageSent}
+            onPromptClick={handlePromptClick}
+            currentCode={currentCode}
           />
         </div>
       </div>

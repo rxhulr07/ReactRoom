@@ -28,6 +28,16 @@ const SessionSchema = new mongoose.Schema({
     image: {
       type: String, // URL to uploaded image
     },
+    code: {
+      jsx: {
+        type: String,
+        default: '',
+      },
+      css: {
+        type: String,
+        default: '',
+      },
+    },
   }],
   currentCode: {
     jsx: {
