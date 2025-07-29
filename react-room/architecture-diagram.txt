@@ -1,0 +1,119 @@
+REACT AI - ARCHITECTURAL DIAGRAM
+=====================================
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              REACT AI ARCHITECTURE                              │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   CLIENT LAYER  │    │   PRESENTATION  │    │   BUSINESS      │    │   DATA LAYER    │
+│                 │    │     LAYER       │    │     LAYER       │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                    FRONTEND                                     │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
+│  │   Pages     │  │ Components  │  │   Styles    │  │   Public    │            │
+│  │             │  │             │  │             │  │             │            │
+│  │ • index.js  │  │ • Layout/   │  │ • globals.css│  │ • Static    │            │
+│  │ • _app.js   │  │ • Chat/     │  │ • Tailwind  │  │   Assets    │            │
+│  │ • _document │  │ • Preview/  │  │             │  │             │            │
+│  │ • auth/     │  │             │  │             │  │             │            │
+│  │ • session/  │  │             │  │             │  │             │            │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘            │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                   BACKEND                                       │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐            │
+│  │   API       │  │   Models    │  │   Library   │  │   External  │            │
+│  │   Routes    │  │             │  │             │  │   Services  │            │
+│  │             │  │             │  │             │  │             │            │
+│  │ • /api/auth │  │ • User.js   │  │ • mongodb.js│  │ • Google    │            │
+│  │ • /api/chat │  │ • Session.js│  │             │  │   Gemini    │            │
+│  │ • /api/sess │  │             │  │             │  │ • NextAuth  │            │
+│  │ • /api/test │  │             │  │             │  │ • MongoDB   │            │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘            │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                 DATA FLOW                                       │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  User Input → Frontend → API Route → Business Logic → AI Service → Database    │
+│       ↑                                                              ↓         │
+│  Component Preview ← Response ← Generated Code ← AI Response ← Database Query  │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              DETAILED COMPONENT MAP                             │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+FRONTEND STRUCTURE:
+├── pages/
+│   ├── index.js (Dashboard)
+│   ├── _app.js (App wrapper)
+│   ├── _document.js (HTML structure)
+│   ├── auth/
+│   │   ├── signin.js
+│   │   └── signup.js
+│   └── session/
+│       └── [id].js (Session page)
+├── components/
+│   ├── layout/
+│   │   ├── Layout.js
+│   │   ├── Navbar.js
+│   │   └── Sidebar.js
+│   ├── chat/
+│   │   └── ChatPanel.js
+│   └── preview/
+│       └── ComponentPreview.js
+├── styles/
+│   └── globals.css
+└── public/
+    └── (Static assets)
+
+BACKEND STRUCTURE:
+├── pages/api/
+│   ├── auth/
+│   │   ├── [...nextauth].js (NextAuth config)
+│   │   └── signup.js
+│   ├── chat/
+│   │   └── index.js (AI component generation)
+│   ├── sessions/
+│   │   ├── index.js (Session management)
+│   │   └── [id].js (Individual session)
+│   └── test/
+│       └── create-user.js
+├── models/
+│   ├── User.js
+│   └── Session.js
+└── lib/
+    └── mongodb.js
+
+EXTERNAL INTEGRATIONS:
+├── Google Gemini AI (Component generation)
+├── NextAuth.js (Authentication)
+├── MongoDB (Database)
+└── Google OAuth (Social login)
+
+TECHNOLOGY STACK:
+├── Frontend: Next.js 15.4.4, React 19.1.0, Tailwind CSS 4
+├── Backend: Next.js API Routes, Mongoose, NextAuth.js
+├── AI: Google Generative AI (Gemini 1.5 Flash)
+├── Database: MongoDB
+└── Utilities: Axios, Formidable, JSZip, Framer Motion
+
+SECURITY FEATURES:
+├── Password hashing (bcryptjs)
+├── JWT token authentication
+├── Input validation
+├── Protected API routes
+└── Environment variable management
+
+DEPLOYMENT READY FOR:
+├── Vercel
+└── Render 
