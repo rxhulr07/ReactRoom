@@ -1,44 +1,40 @@
-# React AI - Comprehensive Architecture
-
-```mermaid
 flowchart TD
-    %% Authentication Section
-    A[User] -->|Visits App| B[Landing Page]
-    B --> C{Authentication}
-    C -->|Google OAuth| D[NextAuth.js]
-    C -->|Email/Password| D
-    D -->|JWT Token| E[Cookie Storage]
-    E --> F[Dashboard]
+    %% Entry & Authentication
+    A[👤 User] -->|Visits App| B[🌐 Landing Page]
+    B --> C{🔐 Authentication}
+    C -->|Google OAuth<br>or Email/Password| D[NextAuth.js]
+    D -->|JWT Token| E[🔒 Cookie Storage]
+    E --> F[📊 Dashboard]
 
     %% Session Management
-    F --> G[Create New Session]
-    F --> H[View Past Sessions]
-    G --> I[Chat Interface]
+    F --> G[🆕 New Session]
+    F --> H[📁 Past Sessions]
+    G --> I[💬 Chat Interface]
 
-    %% AI Interaction Flow
-    I --> J[User Prompt]
-    J --> K[Form Submission]
-    K --> L[/API Route\n/api/chat/]
-    L --> M[JWT Verification]
-    M --> N[Formidable\nParse Input]
-    N --> O[Gemini API]
-    O --> P[Generate JSX/CSS]
-    P --> Q[Format Response]
+    %% AI Interaction
+    I --> J[📝 User Prompt]
+    J --> K[📨 Submit Prompt]
+    K --> L[/api/chat/]
+    L --> M[🔑 JWT Verification]
+    M --> N[🧾 Parse Input (Formidable)]
+    N --> O[🧠 Gemini API]
+    O --> P[🛠️ Generate JSX/CSS]
+    P --> Q[🧹 Format Response]
 
-    %% Database Operations
-    Q --> R[(MongoDB)]
-    R -->|Save Session| S[Update Chat History]
-    S --> T[Return Response]
+    %% Database Ops
+    Q --> R[(🗄️ MongoDB)]
+    R -->|Save Session| S[📜 Update History]
+    S --> T[📨 Return Response]
 
     %% Frontend Update
-    T --> U[Display Component]
-    U --> V[Live Preview]
-    V --> W[User Actions]
-    W -->|Copy Code| X[Clipboard]
-    W -->|Download| Y[FileSaver.js]
-    W -->|Continue Chat| J
+    T --> U[🧱 Render Component]
+    U --> V[👀 Live Preview]
+    V --> W[🎛️ User Options]
+    W -->|📋 Copy Code| X[📎 Clipboard]
+    W -->|⬇️ Download| Y[💾 FileSaver.js]
+    W -->|↩️ Continue Chat| J
 
-    %% System Components
+    %% Grouped Sections
     subgraph Frontend
         B
         F
@@ -55,7 +51,7 @@ flowchart TD
         N
     end
 
-    subgraph AI
+    subgraph AI Engine
         O
         P
         Q
@@ -71,14 +67,14 @@ flowchart TD
         Y
     end
 
-    %% Styling
-    classDef frontend fill:#cff,stroke:#333;
-    classDef backend fill:#fcf,stroke:#333;
-    classDef ai fill:#ffc,stroke:#333;
-    classDef db fill:#cfc,stroke:#333;
-    classDef util fill:#ccc,stroke:#333;
+    %% Style Definitions
+    classDef frontend fill:#e0f7ff,stroke:#036;
+    classDef backend fill:#f3e5f5,stroke:#603;
+    classDef ai fill:#fff9c4,stroke:#660;
+    classDef db fill:#dcedc8,stroke:#262;
+    classDef util fill:#eceff1,stroke:#555;
     class Frontend frontend;
     class Backend backend;
-    class AI ai;
+    class AIEngine ai;
     class Database db;
     class Utilities util;
