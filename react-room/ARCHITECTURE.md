@@ -1,80 +1,43 @@
-flowchart TD
-    %% Entry & Authentication
-    A[👤 User] -->|Visits App| B[🌐 Landing Page]
-    B --> C{🔐 Authentication}
-    C -->|Google OAuth<br>or Email/Password| D[NextAuth.js]
-    D -->|JWT Token| E[🔒 Cookie Storage]
-    E --> F[📊 Dashboard]
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant N as NextAuth
+    participant M as MongoDB
+    participant G as Google
+    participant R as Redis
+    participant A as GeminiAPI
+    participant S as SessionService
 
-    %% Session Management
-    F --> G[🆕 New Session]
-    F --> H[📁 Past Sessions]
-    G --> I[💬 Chat Interface]
+    U->>F: Start Login
+    alt Google Login
+        F->>G: Initiate OAuth
+        G-->>N: Return Token
+    else Email Login
+        F->>N: Submit Credentials
+        N->>M: Verify User
+    end
+    N->>M: Update User
+    N->>R: Store Session
+    N-->>F: Return JWT
+    F-->>U: Show Dashboard
 
-    %% AI Interaction
-    I --> J[📝 User Prompt]
-    J --> K[📨 Submit Prompt]
-    K --> L[/api/chat/]
-    L --> M[🔑 JWT Verification]
-    M --> N[🧾 Parse Input (Formidable)]
-    N --> O[🧠 Gemini API]
-    O --> P[🛠️ Generate JSX/CSS]
-    P --> Q[🧹 Format Response]
-
-    %% Database Ops
-    Q --> R[(🗄️ MongoDB)]
-    R -->|Save Session| S[📜 Update History]
-    S --> T[📨 Return Response]
-
-    %% Frontend Update
-    T --> U[🧱 Render Component]
-    U --> V[👀 Live Preview]
-    V --> W[🎛️ User Options]
-    W -->|📋 Copy Code| X[📎 Clipboard]
-    W -->|⬇️ Download| Y[💾 FileSaver.js]
-    W -->|↩️ Continue Chat| J
-
-    %% Grouped Sections
-    subgraph Frontend
-        B
-        F
-        I
-        U
-        V
-        W
+    U->>F: Open Chat
+    F->>S: New Session
+    S->>M: Create Record
+    loop Chat Loop
+        U->>F: Enter Prompt
+        F->>A: Send (with JWT)
+        A-->>F: Return Code
+        F->>S: Save Message
+        S->>M: Update Session
+        F-->>U: Show Preview
     end
 
-    subgraph Backend
-        D
-        L
-        M
-        N
-    end
-
-    subgraph AI Engine
-        O
-        P
-        Q
-    end
-
-    subgraph Database
-        R
-        S
-    end
-
-    subgraph Utilities
-        X
-        Y
-    end
-
-    %% Style Definitions
-    classDef frontend fill:#e0f7ff,stroke:#036;
-    classDef backend fill:#f3e5f5,stroke:#603;
-    classDef ai fill:#fff9c4,stroke:#660;
-    classDef db fill:#dcedc8,stroke:#262;
-    classDef util fill:#eceff1,stroke:#555;
-    class Frontend frontend;
-    class Backend backend;
-    class AIEngine ai;
-    class Database db;
-    class Utilities util;
+    U->>F: View Sessions
+    F->>S: Get History
+    S->>M: Query Sessions
+    M-->>S: Return Data
+    S-->>F: Session List
+    F-->>U: Display History
+```
